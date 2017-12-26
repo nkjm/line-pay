@@ -66,7 +66,7 @@ class LinePay {
     @param {String} [options.mid] - LINE member ID.
     @param {String} [options.oneTimeKey] - One time key.
     @param {String} [options.confirmUrl] - URL to transition after the payment approval. Default is CURRENT_PROTOCOL://CURRENT_HOSTNAME/MIDDLEWARE_MOUNT_POINT/confirm
-    @param {String} [options.confirmUrlType="CLIENT"] - Confirm URL type. Supported values are CLIENT and SERVER.
+    @param {String} [options.confirmUrlType="CLIENT"] - Confirm URL type. In this middleware, supported values are CLIENT only.
     @param {Boolean} [options.checkConfirmUrlBrowswer=false] - If check browser on transitioning to confirm URL.
     @param {String} [options.cancelUrl] - URL to transition after cancellation of payment.
     @param {String} [options.packageName] - String to prevent phising in Android.
@@ -78,7 +78,10 @@ class LinePay {
     */
     middleware(options){
         router.get("/", (req, res, next) => {
-            options.confirmUrl = options.confirmUrl || `${req.protocol}://${req.hostname}${req.baseUrl}/confirm`;
+            options.confirmUrl = options.confirmUrl || `https://${req.hostname}${req.baseUrl}/confirm`;
+
+            req.session.amount = options.amount;
+            req.session.currency = options.currency;
 
             this.reserve(options).then((response) => {
                 if (true){ // TBD
@@ -94,7 +97,7 @@ class LinePay {
         });
 
         router.get("/confirm", (req, res, next) => {
-            if (!req.query || !req.query.transationId){
+            if (!req.query || !req.query.transactionId){
                 return res.status(400).send("Transaction id not found.");
             }
 
@@ -104,9 +107,9 @@ class LinePay {
                 amount: req.session.amount,
                 currency: req.session.currency
             }).then((response) => {
-                return res.json(response);
+                next();
             }).catch((exception) => {
-                return res.status(400).json(exception);
+                return res.status(500).json(exception);
             });
         });
 
