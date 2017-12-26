@@ -81,7 +81,7 @@ class LinePay {
             options.confirmUrl = options.confirmUrl || `https://${req.hostname}${req.baseUrl}/confirm`;
 
             req.session.productName = options.productName;
-            req.sessoin.orderId = options.orderId;
+            req.session.orderId = options.orderId;
             req.session.amount = options.amount;
             req.session.currency = options.currency;
             req.session.confirmUrl = options.confirmUrl;
