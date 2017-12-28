@@ -28,8 +28,8 @@ app.use("/pay", pay.middleware({
     currency: "JPY",
     orderId: uuid(),
     confirmUrl: process.env.LINE_PAY_CONFIRM_URL,
-    //payType: "PREAPPROVED",
-    capture: false
+    payType: "PREAPPROVED",
+    capture: true
 }), (req, res, next) => {
     // Now payment should have been completed.
     res.send("Payment has been completed.");
