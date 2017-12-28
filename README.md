@@ -1,6 +1,6 @@
 # Overview
 
-This is a SDK to use LINE Pay inside the node.js based application on top of express framework.
+This is unofficial SDK to use LINE Pay inside the node.js based application on top of express framework.
 
 # Getting started
 

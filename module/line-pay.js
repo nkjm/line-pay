@@ -25,6 +25,7 @@ class LinePay {
     */
     constructor(options){
         const required_params = ["channelId", "channelSecret"];
+        const optional_params = ["isSandbox", "sessionOptions"];
 
         // Check if required parameters are all set.
         required_params.map((param) => {
@@ -33,13 +34,20 @@ class LinePay {
             }
         })
 
+        // Check if configured parameters are all valid.
+        Object.keys(options).map((param) => {
+            if (!required_params.includes(param) && !optional_params.includes(param)){
+                throw new Error(`${param} is not a valid parameter.`);
+            }
+        })
+
         this.channelId = options.channelId;
         this.channelSecret = options.channelSecret;
         this.isSandbox = options.isSandbox || false;
         if (this.isSandbox){
-            this.api_hostname = "sandbox-api-pay.line.me";
+            this.apiHostname = "sandbox-api-pay.line.me";
         } else {
-            this.api_hostname = "api-pay.line.me";
+            this.apiHostname = "api-pay.line.me";
         }
 
         this.headers = {
@@ -87,6 +95,8 @@ class LinePay {
             req.session.confirmUrl = options.confirmUrl;
 
             this.reserve(options).then((response) => {
+                req.session.transactionId = response.info.transactionId;
+
                 if (true){ // TBD
                     debug(`Redirecting to payment URL: ${response.info.paymentUrl.web}...`);
                     return res.redirect(response.info.paymentUrl.web);
@@ -158,7 +168,7 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/request`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/request`;
         let body = options;
         debug(`Going to reserve payment...`);
         return request.postAsync({
@@ -205,7 +215,7 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/${options.transactionId}/confirm`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/${options.transactionId}/confirm`;
         let body = {
             amount: options.amount,
             currency: options.currency
@@ -241,7 +251,7 @@ class LinePay {
     @param {String} options.orderId - Order id which specified in reserve API.
     @param {Boolean} [options.capture=true] - Set true to capture payment simultaneously.
     */
-    execPreapprovedPay(options){
+    confirmPreapprovedPay(options){
         const required_params = ["regKey", "productName", "amount", "currency", "orderId"];
         const optional_params = ["capture"];
 
@@ -259,7 +269,7 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/preapprovedPay/${options.regKey}/payment`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/payment`;
         let body = options;
         delete body.regKey;
         debug(`Going to execute preapproved payment of orderId: ${options.orderId}...`);
@@ -306,14 +316,14 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/preapprovedPay/${options.regKey}/check`;
-        let body = options;
-        delete body.regKey;
+        let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/check`;
+        if (options.creditCardAuth === true){
+            url += "?creditCardAuth=true";
+        }
         debug(`Going to check availability of preapproved payment for regKey: ${options.regKey}...`);
-        return request.postAsync({
+        return request.getAsync({
             url: url,
             headers: this.headers,
-            body: body,
             json: true
         }).then((response) => {
             if (response.body.returnCode && response.body.returnCode == "0000"){
@@ -352,7 +362,7 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/preapprovedPay/${options.regKey}/expire`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/expire`;
         debug(`Going to expire of preapproved payment for regKey: ${options.regKey}...`);
         return request.postAsync({
             url: url,
@@ -377,7 +387,7 @@ class LinePay {
     @param {Object} options - Object which contains parameters.
     @param {String} options.transactionId - Transaction id to void.
     */
-    voidAuthorizedPay(options){
+    voidAuthorization(options){
         const required_params = ["transactionId"];
         const optional_params = [""];
 
@@ -395,7 +405,7 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/authorizations/${options.transactionId}/void`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/authorizations/${options.transactionId}/void`;
         debug(`Going to void of authorized payment for transaction id: ${options.transactionId}...`);
         return request.postAsync({
             url: url,
@@ -414,6 +424,50 @@ class LinePay {
         })
     }
 
+    /**
+    Method to inquire authorization.
+    @param {Object} options - Object which contains parameters.
+    @param {String} [options.transactionId] - Transaction id to inquire.
+    @param {String} [options.orderId] - Order id to inquire.
+    */
+    inquireAuthorization(options){
+        const required_params = [];
+        const optional_params = ["transactionId", "orderId"];
+
+        // Check if required parameters are all set.
+        required_params.map((param) => {
+            if (!options[param]){
+                throw new Error(`Required parameter ${param} is missing.`);
+            }
+        })
+
+        // Check if configured parameters are all valid.
+        Object.keys(options).map((param) => {
+            if (!required_params.includes(param) && !optional_params.includes(param)){
+                throw new Error(`${param} is not a valid parameter.`);
+            }
+        })
+
+        let url = `https://${this.apiHostname}/${api_version}/payments/authorizations?`;
+        if (options.transactionId) url += `transactionId=${options.transactionId}`;
+        if (options.orderId) url += `orderId=${options.orderId}`;
+        debug(`Going to inquire authorization...`);
+        return request.getAsync({
+            url: url,
+            headers: this.headers,
+            json: true
+        }).then((response) => {
+            if (response.body.returnCode && response.body.returnCode == "0000"){
+                debug(`Completed inquiring authorization.`);
+                debug(response.body);
+                return response.body;
+            } else {
+                debug(`Failed to inquiring authorization.`);
+                debug(response.body);
+                return Promise.reject(new Error(response.body.returnMessage));
+            }
+        })
+    }
 
     /**
     Method to capture payment
@@ -441,12 +495,13 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/authorizations/${options.transactionId}/capture`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/authorizations/${options.transactionId}/capture`;
         let body = {
             amount: options.amount,
             currency: options.currency
         }
         debug(`Going to capture payment...`);
+        delete body.transactionId;
         return request.postAsync({
             url: url,
             headers: this.headers,
@@ -471,7 +526,7 @@ class LinePay {
     @param {String} [options.transactionId] - Transaction id to inquire.
     @param {String} [options.orderId] - Order id to inquire.
     */
-    inquirePayment(){
+    inquirePayment(options){
         const required_params = [];
         const optional_params = ["transactionId", "orderId"];
 
@@ -489,8 +544,8 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments?`;
-        if (options.transactionId) url += `transationId=${options.transactionId}`;
+        let url = `https://${this.apiHostname}/${api_version}/payments?`;
+        if (options.transactionId) url += `transactionId=${options.transactionId}`;
         if (options.orderId) url += `orderId=${options.orderId}`;
         debug(`Going to inquire payment...`);
         return request.getAsync({
@@ -504,51 +559,6 @@ class LinePay {
                 return response.body;
             } else {
                 debug(`Failed to inquiring payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
-            }
-        })
-    }
-
-    /**
-    Method to inquire authorization.
-    @param {Object} options - Object which contains parameters.
-    @param {String} [options.transactionId] - Transaction id to inquire.
-    @param {String} [options.orderId] - Order id to inquire.
-    */
-    inquireAuthorization(){
-        const required_params = [];
-        const optional_params = ["transactionId", "orderId"];
-
-        // Check if required parameters are all set.
-        required_params.map((param) => {
-            if (!options[param]){
-                throw new Error(`Required parameter ${param} is missing.`);
-            }
-        })
-
-        // Check if configured parameters are all valid.
-        Object.keys(options).map((param) => {
-            if (!required_params.includes(param) && !optional_params.includes(param)){
-                throw new Error(`${param} is not a valid parameter.`);
-            }
-        })
-
-        let url = `https://${this.api_hostname}/${api_version}/payments/authorizations?`;
-        if (options.transactionId) url += `transationId=${options.transactionId}`;
-        if (options.orderId) url += `orderId=${options.orderId}`;
-        debug(`Going to inquire authorization...`);
-        return request.getAsync({
-            url: url,
-            headers: this.headers,
-            json: true
-        }).then((response) => {
-            if (response.body.returnCode && response.body.returnCode == "0000"){
-                debug(`Completed inquiring authorization.`);
-                debug(response.body);
-                return response.body;
-            } else {
-                debug(`Failed to inquiring authorization.`);
                 debug(response.body);
                 return Promise.reject(new Error(response.body.returnMessage));
             }
@@ -580,7 +590,7 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.api_hostname}/${api_version}/payments/${options.transactionId}/refund`;
+        let url = `https://${this.apiHostname}/${api_version}/payments/${options.transactionId}/refund`;
         let body = {
             refundAmount: options.refundAmount
         }
