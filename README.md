@@ -57,6 +57,7 @@ You can control the flow by using individual methods like reserve() or confirm()
 # Reference
 
 For more methods, refer to [API reference](https://nkjm.github.io/line-pay/LinePay.html).
+[Demo & Sample code to use LINE Pay inside chatbot](https://github.com/nkjm/line-pay-in-bot) would be a good reference for Bot developers.
 
 # License
 
