@@ -2,9 +2,12 @@
 
 require("dotenv").config();
 
+// Required constants
+const LINE_PAY_CONFIRM_URL = process.env.LINE_PAY_CONFIRM_URL;
+
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const debug = require("debug")("bot-express:test");
+const debug = require("debug")("line-pay:test");
 const request = require("request");
 const uuid = require("uuid/v4");
 const line_pay = require("../module/line-pay.js")
@@ -30,8 +33,9 @@ describe("Test method in beginning status", function(){
                     //productName: "demo product",
                     amount: 1,
                     currency: "JPY",
-                    confirmUrl: process.env.LINE_PAY_CONFIRM_URL,
-                    orderId: uuid()
+                    confirmUrl: LINE_PAY_CONFIRM_URL,
+                    orderId: uuid(),
+                    payType: "PREAPPROVED"
                 }
                 return pay.reserve(options);
             }).catch(function(e){
@@ -49,14 +53,34 @@ describe("Test method in beginning status", function(){
                     productName: "demo product",
                     amount: 1,
                     currency: "JPY",
-                    confirmUrl: process.env.LINE_PAY_CONFIRM_URL,
+                    confirmUrl: LINE_PAY_CONFIRM_URL,
                     orderId: uuid(),
+                    payType: "PREAPPROVED",
                     invalidParam: true
                 }
                 return pay.reserve(options);
             }).catch(function(e){
                 e.should.be.instanceOf(Error);
                 e.should.have.property("message");
+            });
+        });
+    });
+
+    describe("Reserve payment with invalid parameter value.", function(){
+        it("should throw error.", function(){
+            this.timeout(TIMEOUT);
+            return Promise.resolve().then(function(){
+                let options = {
+                    productName: "demo product",
+                    amount: 1,
+                    currency: "ZZZ", // invalid
+                    confirmUrl: LINE_PAY_CONFIRM_URL,
+                    orderId: uuid(),
+                    payType: "PREAPPROVED"
+                }
+                return pay.reserve(options);
+            }).catch(function(e){
+                e.returnCode.should.equal("2102");
             });
         });
     });
@@ -69,7 +93,7 @@ describe("Test method in beginning status", function(){
                     productName: "demo product",
                     amount: 1,
                     currency: "JPY",
-                    confirmUrl: process.env.LINE_PAY_CONFIRM_URL,
+                    confirmUrl: LINE_PAY_CONFIRM_URL,
                     orderId: uuid(),
                     payType: "PREAPPROVED"
                 }

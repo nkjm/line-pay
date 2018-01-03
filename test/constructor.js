@@ -4,7 +4,7 @@ require("dotenv").config();
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const debug = require("debug")("bot-express:test");
+const debug = require("debug")("line-pay:test");
 const line_pay = require("../module/line-pay.js")
 
 chai.use(chaiAsPromised);

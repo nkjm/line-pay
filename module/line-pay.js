@@ -4,10 +4,11 @@ require("dotenv").config();
 
 const router = require("express").Router();
 const session = require("express-session");
-const debug = require("debug")("line-pay");
+const debug = require("debug")("line-pay:module");
 const request = require("request");
 const api_version = "v2";
 
+Error = require("./line-pay-error.js");
 Promise = require("bluebird");
 Promise.promisifyAll(request);
 
@@ -184,7 +185,7 @@ class LinePay {
             } else {
                 debug(`Failed to reserve payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -234,7 +235,7 @@ class LinePay {
             } else {
                 debug(`Failed to confirm payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -286,7 +287,7 @@ class LinePay {
             } else {
                 debug(`Failed to execute preapproved payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -333,7 +334,7 @@ class LinePay {
             } else {
                 debug(`Failed to check availability.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -376,7 +377,7 @@ class LinePay {
             } else {
                 debug(`Failed to expire preapprove payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -419,7 +420,7 @@ class LinePay {
             } else {
                 debug(`Failed to void payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -464,7 +465,7 @@ class LinePay {
             } else {
                 debug(`Failed to inquiring authorization.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -515,7 +516,7 @@ class LinePay {
             } else {
                 debug(`Failed to capture payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -560,7 +561,7 @@ class LinePay {
             } else {
                 debug(`Failed to inquiring payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }
@@ -608,7 +609,7 @@ class LinePay {
             } else {
                 debug(`Failed to refund payment.`);
                 debug(response.body);
-                return Promise.reject(new Error(response.body.returnMessage));
+                return Promise.reject(new Error(response.body));
             }
         })
     }

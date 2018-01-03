@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const app = require("express")();
 const uuid = require("uuid/v4");
+const debug = require("debug")("line-pay:server");
 
 let line_pay
 if (process.env.NODE_ENV == "development"){
@@ -28,8 +29,8 @@ app.use("/pay", pay.middleware({
     currency: "JPY",
     orderId: uuid(),
     confirmUrl: process.env.LINE_PAY_CONFIRM_URL,
-    payType: "PREAPPROVED",
-    capture: true
+    capture: false,
+    payType: "PREAPPROVED"
 }), (req, res, next) => {
     // Now payment should have been completed.
     res.send("Payment has been completed.");

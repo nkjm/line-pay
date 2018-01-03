@@ -1,11 +1,11 @@
 {
   "name": "line-pay",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "SDK to use LINE Pay API in node.js app",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --exit",
-    "start": "node sample-server.js"
+    "test": "mocha",
+    "start": "node sample-with-middleware.js"
   },
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
+    "memory-cache": "^0.2.0",
     "mocha": "^4.0.1",
     "uuid": "^3.1.0"
   }
