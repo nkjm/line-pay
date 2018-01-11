@@ -8,7 +8,7 @@ const debug = require("debug")("line-pay:module");
 const request = require("request");
 const api_version = "v2";
 
-Error = require("./line-pay-error.js");
+let Error = require("./line-pay-error.js");
 Promise = require("bluebird");
 Promise.promisifyAll(request);
 
