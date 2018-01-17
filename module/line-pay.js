@@ -21,12 +21,13 @@ class LinePay {
     @param {Object} options
     @param {String} options.channelId - LINE Channel Id
     @param {String} options.channelSecret - LINE Channel secret
+    @param {String} [options.hostname] - Hostname of LINE Pay API. Nomarlly, it is automatically set depeding on isSandbox parameter.
     @param {Boolean} [options.isSandbox=false] - If the environemt is sandbox, set true
     @param {Object} [options.sessionOptions] - Option object for express-session. Refer to https://github.com/expressjs/session for detail.
     */
     constructor(options){
         const required_params = ["channelId", "channelSecret"];
-        const optional_params = ["isSandbox", "sessionOptions"];
+        const optional_params = ["hostname", "isSandbox", "sessionOptions"];
 
         // Check if required parameters are all set.
         required_params.map((param) => {
@@ -50,6 +51,7 @@ class LinePay {
         } else {
             this.apiHostname = "api-pay.line.me";
         }
+        this.apiHostname = options.hostname || this.apiHostname;
 
         this.headers = {
             "X-LINE-ChannelId": this.channelId,

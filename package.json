@@ -1,6 +1,6 @@
 {
   "name": "line-pay",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "SDK to use LINE Pay API in node.js app",
   "main": "index.js",
   "scripts": {
