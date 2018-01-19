@@ -18,6 +18,7 @@ if (process.env.NODE_ENV == "development"){
 const pay = new line_pay({
     channelId: process.env.LINE_PAY_CHANNEL_ID,
     channelSecret: process.env.LINE_PAY_CHANNEL_SECRET,
+    hostname: process.env.LINE_PAY_HOSTNAME,
     isSandbox: false
 });
 
@@ -67,7 +68,7 @@ app.get("/pay/confirm", (req, res, next) => {
     } else {
         throw new Error("Order id not found.");
     }
-    
+
     debug(`Retrieved following reservation.`);
     debug(reservation);
 
