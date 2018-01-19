@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "start": "node sample-without-middleware.js"
+    "start": "node sample-with-middleware.js"
   },
   "repository": {
     "type": "git",
