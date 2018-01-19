@@ -33,7 +33,7 @@ app.get("/pay", (req, res, next) => {
         currency: "JPY",
         orderId: uuid(),
         confirmUrl: process.env.LINE_PAY_CONFIRM_URL,
-        confirmUrlType: "CLIENT"
+        confirmUrlType: "SERVER"
     }
 
     pay.reserve(options).then((response) => {
