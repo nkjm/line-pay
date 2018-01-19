@@ -54,8 +54,12 @@ app.get("/pay", (req, res, next) => {
 
 app.get("/pay/confirm", (req, res, next) => {
     let reservation;
+
+    debug(`transactionId is ${req.query.transactionId}`);
+
     if (req.query.orderId) {
         debug(`Found orderId so confirmUrlType should be SERVER.`);
+        debug(`orderId is ${req.query.orderId}`);
         reservation = cache.get(req.query.orderId);
     } else if (req.session && req.session.orderId){
         debug(`orderId not found so confirmUrlType should be CLIENT.`);
@@ -63,7 +67,7 @@ app.get("/pay/confirm", (req, res, next) => {
     } else {
         throw new Error("Order id not found.");
     }
-
+    
     debug(`Retrieved following reservation.`);
     debug(reservation);
 
