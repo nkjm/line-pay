@@ -101,10 +101,10 @@ class LinePay {
                 req.session.transactionId = response.info.transactionId;
 
                 if (true){ // TBD
-                    debug(`Redirecting to payment URL: ${response.info.paymentUrl.web}...`);
+                    //debug(`Redirecting to payment URL: ${response.info.paymentUrl.web}...`);
                     return res.redirect(response.info.paymentUrl.web);
                 } else {
-                    debug(`Redirecting to payment URL: ${response.info.paymentUrl.app}...`);
+                    //debug(`Redirecting to payment URL: ${response.info.paymentUrl.app}...`);
                     return res.redirect(response.info.paymentUrl.app);
                 }
             }).catch((exception) => {
@@ -118,6 +118,7 @@ class LinePay {
             }
 
             let transactionId = req.query.transactionId;
+            debug(`transactionId is ${transactionId}`);
             this.confirm({
                 transactionId: transactionId,
                 amount: req.session.amount,
