@@ -184,6 +184,7 @@ class LinePay {
         }).then((response) => {
             let body = lossless_json.parse(response.body);
             if (body.returnCode && body.returnCode == "0000"){
+                body.info.transactionId = body.info.transactionId.r.value;
                 debug(`Completed reserving payment.`);
                 debug(body);
                 return body;
@@ -222,25 +223,25 @@ class LinePay {
         })
 
         let url = `https://${this.apiHostname}/${api_version}/payments/${options.transactionId}/confirm`;
-        let body = {
+        let body = JSON.stringify({
             amount: options.amount,
             currency: options.currency
-        }
+        })
         debug(`Going to confirm payment of transaction: ${options.transactionId}...`);
         return request.postAsync({
             url: url,
             headers: this.headers,
             body: body
         }).then((response) => {
-            response = lossless_json.parse(response);
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed confirming payment.`);
-                debug(response.body);
-                return response.body;
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to confirm payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
