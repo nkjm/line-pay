@@ -6,6 +6,7 @@ const router = require("express").Router();
 const session = require("express-session");
 const debug = require("debug")("line-pay:module");
 const request = require("request");
+const JSON = require("lossless-json");
 const api_version = "v2";
 
 let Error = require("./line-pay-error.js");
@@ -54,6 +55,7 @@ class LinePay {
         this.apiHostname = options.hostname || this.apiHostname;
 
         this.headers = {
+            "Content-Type": "application/json",
             "X-LINE-ChannelId": this.channelId,
             "X-LINE-ChannelSecret": this.channelSecret
         }
@@ -178,12 +180,13 @@ class LinePay {
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body,
-            json: true
+            body: body
         }).then((response) => {
+            response = JSON.parse(response);
             if (response.body.returnCode && response.body.returnCode == "0000"){
                 debug(`Completed reserving payment.`);
                 debug(response.body);
+                debug(`transactionId is ${String(response.body.transactionId)}`);
                 return response.body;
             } else {
                 debug(`Failed to reserve payment.`);
@@ -228,9 +231,9 @@ class LinePay {
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body,
-            json: true
+            body: body
         }).then((response) => {
+            response = JSON.parse(response);
             if (response.body.returnCode && response.body.returnCode == "0000"){
                 debug(`Completed confirming payment.`);
                 debug(response.body);
