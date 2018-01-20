@@ -6,7 +6,7 @@ const router = require("express").Router();
 const session = require("express-session");
 const debug = require("debug")("line-pay:module");
 const request = require("request");
-const lessless_json = require("lossless-json");
+const lossless_json = require("lossless-json");
 const api_version = "v2";
 
 let Error = require("./line-pay-error.js");
@@ -56,7 +56,8 @@ class LinePay {
 
         this.headers = {
             "X-LINE-ChannelId": this.channelId,
-            "X-LINE-ChannelSecret": this.channelSecret
+            "X-LINE-ChannelSecret": this.channelSecret,
+            "Content-Type": "application/json"
         }
 
         this.sessionOptions = options.sessionOptions || {
