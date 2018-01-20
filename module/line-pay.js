@@ -180,19 +180,17 @@ class LinePay {
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body,
-            json: true
+            body: body
         }).then((response) => {
-            response = lossless_json.parse(response);
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed reserving payment.`);
-                debug(response.body);
-                debug(`transactionId is ${String(response.body.transactionId)}`);
-                return response.body;
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to reserve payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
