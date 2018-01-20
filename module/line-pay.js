@@ -183,10 +183,10 @@ class LinePay {
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body);
+            debug(body);
             if (body.returnCode && body.returnCode == "0000"){
                 body.info.transactionId = body.info.transactionId.r.value;
                 debug(`Completed reserving payment.`);
-                debug(body);
                 return body;
             } else {
                 debug(`Failed to reserve payment.`);
