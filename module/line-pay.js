@@ -175,7 +175,7 @@ class LinePay {
         })
 
         let url = `https://${this.apiHostname}/${api_version}/payments/request`;
-        let body = options;
+        let body = JSON.stringify(options);
         debug(`Going to reserve payment...`);
         return request.postAsync({
             url: url,
