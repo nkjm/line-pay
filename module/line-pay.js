@@ -55,7 +55,6 @@ class LinePay {
         this.apiHostname = options.hostname || this.apiHostname;
 
         this.headers = {
-            "Content-Type": "application/json",
             "X-LINE-ChannelId": this.channelId,
             "X-LINE-ChannelSecret": this.channelSecret
         }
@@ -180,7 +179,8 @@ class LinePay {
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body
+            body: body,
+            json: true
         }).then((response) => {
             response = lossless_json.parse(response);
             if (response.body.returnCode && response.body.returnCode == "0000"){
