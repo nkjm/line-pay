@@ -6,7 +6,7 @@ const router = require("express").Router();
 const session = require("express-session");
 const debug = require("debug")("line-pay:module");
 const request = require("request");
-const JSON = require("lossless-json");
+const lessless_json = require("lossless-json");
 const api_version = "v2";
 
 let Error = require("./line-pay-error.js");
@@ -182,7 +182,7 @@ class LinePay {
             headers: this.headers,
             body: body
         }).then((response) => {
-            response = JSON.parse(response);
+            response = lossless_json.parse(response);
             if (response.body.returnCode && response.body.returnCode == "0000"){
                 debug(`Completed reserving payment.`);
                 debug(response.body);
@@ -233,7 +233,7 @@ class LinePay {
             headers: this.headers,
             body: body
         }).then((response) => {
-            response = JSON.parse(response);
+            response = lossless_json.parse(response);
             if (response.body.returnCode && response.body.returnCode == "0000"){
                 debug(`Completed confirming payment.`);
                 debug(response.body);
