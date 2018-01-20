@@ -120,7 +120,6 @@ class LinePay {
             }
 
             let transactionId = req.query.transactionId;
-            debug(`transactionId is ${transactionId}`);
             this.confirm({
                 transactionId: transactionId,
                 amount: req.session.amount,
@@ -183,10 +182,10 @@ class LinePay {
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body);
-            debug(body);
             if (body.returnCode && body.returnCode == "0000"){
                 body.info.transactionId = body.info.transactionId.value;
                 debug(`Completed reserving payment.`);
+                debug(body);
                 return body;
             } else {
                 debug(`Failed to reserve payment.`);
@@ -234,6 +233,7 @@ class LinePay {
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body);
+            body.info.transactionId = body.info.transactionId.value;
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed confirming payment.`);
                 debug(body);
