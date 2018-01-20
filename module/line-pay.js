@@ -185,7 +185,7 @@ class LinePay {
             let body = lossless_json.parse(response.body);
             debug(body);
             if (body.returnCode && body.returnCode == "0000"){
-                body.info.transactionId = body.info.transactionId.r.value;
+                body.info.transactionId = body.info.transactionId.value;
                 debug(`Completed reserving payment.`);
                 return body;
             } else {
