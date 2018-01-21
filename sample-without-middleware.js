@@ -4,8 +4,7 @@ require("dotenv").config();
 
 const app = require("express")();
 const uuid = require("uuid/v4");
-const cache = require("memory-cache");
-const session = require("express-session");
+const cache = require("memory-cache"); // To save order information.
 const debug = require("debug")("line-pay:server");
 
 let line_pay
@@ -43,38 +42,27 @@ app.get("/pay", (req, res, next) => {
         debug(`Reservation was made. Detail is following.`);
         debug(reservation);
 
-        if (options.confirmUrlType == "SERVER"){
-            cache.put(reservation.orderId, reservation);
-        } else {
-            req.session = reservation;
-        }
+        // Save order information
+        cache.put(reservation.transactionId, reservation);
 
         res.redirect(response.info.paymentUrl.web);
     })
 });
 
 app.get("/pay/confirm", (req, res, next) => {
-    let reservation;
 
     debug(`transactionId is ${req.query.transactionId}`);
+    let reservation = cache.get(req.query.transactionId);
 
-    if (req.query.orderId) {
-        debug(`Found orderId so confirmUrlType should be SERVER.`);
-        debug(`orderId is ${req.query.orderId}`);
-        reservation = cache.get(req.query.orderId);
-    } else if (req.session && req.session.orderId){
-        debug(`orderId not found so confirmUrlType should be CLIENT.`);
-        reservation = req.sessoin;
-    } else {
-        throw new Error("Order id not found.");
+    if (!reservation){
+        throw new Error("Reservation not found.");
     }
 
     debug(`Retrieved following reservation.`);
     debug(reservation);
 
-    let transactionId = req.query.transactionId;
     let options = {
-        transactionId: transactionId,
+        transactionId: req.query.transactionId,
         amount: reservation.amount,
         currency: reservation.currency
     }

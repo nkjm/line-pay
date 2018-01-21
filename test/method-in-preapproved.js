@@ -71,6 +71,7 @@ describe("Test method in preapproved status", function(){
             }).then(function(response){
                 response.returnCode.should.equal("0000");
                 response.info.should.have.property("transactionId");
+                (typeof response.info.transactionId).should.equal("string");
             })
         });
     });

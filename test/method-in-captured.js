@@ -63,6 +63,7 @@ describe("Test method in captured status", function(){
                 return pay.inquirePayment(options);
             }).then(function(response){
                 response.info[0].should.have.property("transactionId");
+                (typeof response.info[0].transactionId).should.equal("string");
                 response.info[0].transactionType.should.equal("PAYMENT");
                 response.info[0].currency.should.equal("JPY");
                 response.info[0].payInfo[0].method.should.equal("BALANCE");
@@ -72,7 +73,6 @@ describe("Test method in captured status", function(){
     });
 
     // If we can retrieve transaction id from order id, we can enable this test.
-    /*
     describe("Refund payment.", function(){
         it("should get payment refunded.", function(){
             this.timeout(TIMEOUT);
@@ -90,12 +90,11 @@ describe("Test method in captured status", function(){
                 let options = {
                     transactionId: response.info.transactionId
                 }
-                console.log(options);
                 return pay.refund(options);
             }).then(function(response){
                 response.info.should.have.property("refundTransactionId");
+                (typeof response.info.refundTransactionId).should.equal("string");
             })
         });
     });
-    */
 });

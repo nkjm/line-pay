@@ -181,11 +181,10 @@ class LinePay {
             headers: this.headers,
             body: body
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed reserving payment.`);
-                body.info.transactionId = body.info.transactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -233,11 +232,10 @@ class LinePay {
             headers: this.headers,
             body: body
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed confirming payment.`);
-                body.info.transactionId = body.info.transactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -279,19 +277,18 @@ class LinePay {
         })
 
         let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/payment`;
+        delete options.regKey;
         let body = JSON.stringify(options);
-        delete body.regKey;
         debug(`Going to execute preapproved payment of orderId: ${options.orderId}...`);
         return request.postAsync({
             url: url,
             headers: this.headers,
             body: body
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed executing preapproved payment.`);
-                body.info.transactionId = body.info.transactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -467,18 +464,10 @@ class LinePay {
             url: url,
             headers: this.headers
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed inquiring authorization.`);
-
-                // Set lossless value of transactionId
-                let i_info = body.info.entries();
-                for (let info of i_info){
-                    info[1].transactionId = info[1].transactionId.value;
-                    body.info[info[0]] = info[1];
-                }
-
                 debug(body);
                 return body;
             } else {
@@ -527,11 +516,10 @@ class LinePay {
             headers: this.headers,
             body: body
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed capturing payment.`);
-                body.info.transactionId = body.info.transactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -574,30 +562,10 @@ class LinePay {
             url: url,
             headers: this.headers
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed inquiring payment.`);
-
-                // Set lossless value of transactionId for info
-                let i_info = body.info.entries();
-                for (let info of i_info){
-                    info[1].transactionId = info[1].transactionId.value;
-                    body.info[info[0]] = info[1];
-                }
-
-                // Set lossless value of transactionId for refundList
-                i_info = body.info.entries();
-                for (let info of i_info){
-                    if (info[1].refundList){
-                        let i_refundList = info[1].refundList.entries();
-                        for (let refund of i_refundList){
-                            refund[1].refundTransactionId = refund[1].refundTransactionId.value;
-                            body.info[info[0]].refundList[refund[0]] = refund[1];
-                        }
-                    }
-                }
-
                 debug(body);
                 return body;
             } else {
@@ -634,21 +602,19 @@ class LinePay {
         })
 
         let url = `https://${this.apiHostname}/${api_version}/payments/${options.transactionId}/refund`;
-        let body = {
+        let body = JSON.stringify({
             refundAmount: options.refundAmount
-        }
+        });
         debug(`Going to refund payment...`);
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body,
-            json: true
+            body: body
         }).then((response) => {
-            let body = lossless_json.parse(response.body);
+            let body = lossless_json.parse(response.body, this._lossless_converter);
 
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed capturing payment.`);
-                body.info.refundTransactionId = body.info.refundTransactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -657,6 +623,22 @@ class LinePay {
                 return Promise.reject(new Error(body));
             }
         })
+    }
+
+    /**
+    Retriever for lossless_json.parse() to convert overflowed number as string.
+    @method
+    */
+    _lossless_converter(key, value){
+        if (value && value.isLosslessNumber) {
+            try {
+                return value.valueOf();
+            } catch (e) {
+                return value.value;
+            }
+        } else {
+            return value;
+        }
     }
 
 }

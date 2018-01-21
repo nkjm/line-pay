@@ -57,7 +57,6 @@ describe("Test method in authorized status", function(){
     });
 
     // We can enable these tests once we can retrieve valid transaction id.
-    /*
     describe("Capture with correct parameters.", function(){
         it("should capture.", function(){
             this.timeout(TIMEOUT);
@@ -81,6 +80,8 @@ describe("Test method in authorized status", function(){
                 return pay.capture(options);
             }).then(function(response){
                 response.returnCode.should.equal("0000");
+                response.info.should.have.property("transactionId");
+                (typeof response.info.transactionId).should.equal("string");
             });
         });
     });
@@ -95,6 +96,7 @@ describe("Test method in authorized status", function(){
                     productName: LINE_PAY_PREAPPROVED_PRODUCT_NAME,
                     amount: LINE_PAY_PREAPPROVED_AMOUNT,
                     currency: LINE_PAY_PREAPPROVED_CURRENCY,
+                    capture: false,
                     orderId: orderId
                 }
                 return pay.confirmPreapprovedPay(options);
@@ -108,5 +110,4 @@ describe("Test method in authorized status", function(){
             });
         });
     });
-    */
 });

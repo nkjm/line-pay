@@ -50,6 +50,7 @@ describe("Test constructor", function(){
                 isSandbox: true
             });
             pay.should.have.property("headers").and.deep.equal({
+                "Content-Type": "application/json",
                 "X-LINE-ChannelId": process.env.LINE_PAY_CHANNEL_ID,
                 "X-LINE-ChannelSecret": process.env.LINE_PAY_CHANNEL_SECRET
             });
