@@ -40,8 +40,7 @@ app.use("/pay", pay.middleware({
     productName: "demo product",
     amount: 1,
     currency: "JPY",
-    orderId: uuid(),
-    confirmUrl: process.env.LINE_PAY_CONFIRM_URL
+    orderId: uuid()
 }), (req, res, next) => {
     // Now payment should have been completed.
     res.send("Payment has been completed.");

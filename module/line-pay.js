@@ -627,7 +627,6 @@ class LinePay {
 
     /**
     Retriever for lossless_json.parse() to convert overflowed number as string.
-    @method
     */
     _lossless_converter(key, value){
         if (value && value.isLosslessNumber) {

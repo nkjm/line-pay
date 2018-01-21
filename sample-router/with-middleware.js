@@ -4,7 +4,7 @@ require("dotenv").config();
 
 const router = require("express").Router();
 const uuid = require("uuid/v4");
-const debug = require("debug")("line-pay:server");
+const debug = require("debug")("line-pay:router");
 
 let line_pay
 if (process.env.NODE_ENV == "development"){
