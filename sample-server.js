@@ -5,7 +5,7 @@ require("dotenv").config();
 const app = require("express")();
 
 app.listen(process.env.PORT || 5000, () => {
-    debug(`server is listening to ${process.env.PORT || 5000}...`);
+    console.log(`server is listening to ${process.env.PORT || 5000}...`);
 });
 
 const router_with_middleware = require("./sample-router/with-middleware");
