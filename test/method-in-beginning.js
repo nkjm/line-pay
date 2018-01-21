@@ -21,6 +21,7 @@ let should = chai.should();
 let pay = new line_pay({
     channelId: process.env.LINE_PAY_CHANNEL_ID,
     channelSecret: process.env.LINE_PAY_CHANNEL_SECRET,
+    hostname: process.env.LINE_PAY_HOSTNAME,
     isSandbox: true
 });
 
@@ -101,6 +102,7 @@ describe("Test method in beginning status", function(){
             }).then(function(response){
                 response.returnCode.should.equal("0000");
                 response.info.should.have.property("transactionId");
+                (typeof response.info.transactionId).should.equal("string");
                 response.info.paymentUrl.should.have.property("web");
                 response.info.paymentUrl.should.have.property("app");
                 response.info.should.have.property("paymentAccessToken");

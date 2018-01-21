@@ -182,9 +182,10 @@ class LinePay {
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body);
+
             if (body.returnCode && body.returnCode == "0000"){
-                body.info.transactionId = body.info.transactionId.value;
                 debug(`Completed reserving payment.`);
+                body.info.transactionId = body.info.transactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -233,9 +234,10 @@ class LinePay {
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body);
-            body.info.transactionId = body.info.transactionId.value;
+
             if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed confirming payment.`);
+                body.info.transactionId = body.info.transactionId.value;
                 debug(body);
                 return body;
             } else {
@@ -277,23 +279,25 @@ class LinePay {
         })
 
         let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/payment`;
-        let body = options;
+        let body = JSON.stringify(options);
         delete body.regKey;
         debug(`Going to execute preapproved payment of orderId: ${options.orderId}...`);
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body,
-            json: true
+            body: body
         }).then((response) => {
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed executing preapproved payment.`);
-                debug(response.body);
-                return response.body;
+                body.info.transactionId = body.info.transactionId.value;
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to execute preapproved payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
@@ -434,7 +438,7 @@ class LinePay {
     /**
     Method to inquire authorization.
     @param {Object} options - Object which contains parameters.
-    @param {String} [options.transactionId] - Transaction id to inquire.
+    @param {String} [options.transactionId] - Transaction id to inquire. *While it is described that data type should be number, javascript cannot handle the scale of transactionId so please set string for this parameter.
     @param {String} [options.orderId] - Order id to inquire.
     */
     inquireAuthorization(options){
@@ -461,17 +465,26 @@ class LinePay {
         debug(`Going to inquire authorization...`);
         return request.getAsync({
             url: url,
-            headers: this.headers,
-            json: true
+            headers: this.headers
         }).then((response) => {
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed inquiring authorization.`);
-                debug(response.body);
-                return response.body;
+
+                // Set lossless value of transactionId
+                let i_info = body.info.entries();
+                for (let info of i_info){
+                    info[1].transactionId = info[1].transactionId.value;
+                    body.info[info[0]] = info[1];
+                }
+
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to inquiring authorization.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
@@ -480,7 +493,7 @@ class LinePay {
     Method to capture payment
     @method
     @param {Object} options - Object which contains parameters.
-    @param {String} options.transactionId - Transaction id returned from reserve API.
+    @param {String} options.transactionId - Transaction id returned from reserve API. *While it is described that data type should be number, javascript cannot handle the scale of transactionId so please set string for this parameter.
     @param {Number} options.amount - Payment amount.
     @param {String} options.currency - Currency following ISO2117. Supported values are USD, JPY, TWD and THB.
     */
@@ -503,26 +516,28 @@ class LinePay {
         })
 
         let url = `https://${this.apiHostname}/${api_version}/payments/authorizations/${options.transactionId}/capture`;
-        let body = {
+        let body = JSON.stringify({
             amount: options.amount,
             currency: options.currency
-        }
+        });
         debug(`Going to capture payment...`);
         delete body.transactionId;
         return request.postAsync({
             url: url,
             headers: this.headers,
-            body: body,
-            json: true
+            body: body
         }).then((response) => {
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed capturing payment.`);
-                debug(response.body);
-                return response.body;
+                body.info.transactionId = body.info.transactionId.value;
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to capture payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
@@ -557,17 +572,38 @@ class LinePay {
         debug(`Going to inquire payment...`);
         return request.getAsync({
             url: url,
-            headers: this.headers,
-            json: true
+            headers: this.headers
         }).then((response) => {
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed inquiring payment.`);
-                debug(response.body);
-                return response.body;
+
+                // Set lossless value of transactionId for info
+                let i_info = body.info.entries();
+                for (let info of i_info){
+                    info[1].transactionId = info[1].transactionId.value;
+                    body.info[info[0]] = info[1];
+                }
+
+                // Set lossless value of transactionId for refundList
+                i_info = body.info.entries();
+                for (let info of i_info){
+                    if (info[1].refundList){
+                        let i_refundList = info[1].refundList.entries();
+                        for (let refund of i_refundList){
+                            refund[1].refundTransactionId = refund[1].refundTransactionId.value;
+                            body.info[info[0]].refundList[refund[0]] = refund[1];
+                        }
+                    }
+                }
+
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to inquiring payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
@@ -608,14 +644,17 @@ class LinePay {
             body: body,
             json: true
         }).then((response) => {
-            if (response.body.returnCode && response.body.returnCode == "0000"){
+            let body = lossless_json.parse(response.body);
+
+            if (body.returnCode && body.returnCode == "0000"){
                 debug(`Completed capturing payment.`);
-                debug(response.body);
-                return response.body;
+                body.info.refundTransactionId = body.info.refundTransactionId.value;
+                debug(body);
+                return body;
             } else {
                 debug(`Failed to refund payment.`);
-                debug(response.body);
-                return Promise.reject(new Error(response.body));
+                debug(body);
+                return Promise.reject(new Error(body));
             }
         })
     }
