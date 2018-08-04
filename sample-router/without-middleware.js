@@ -40,9 +40,7 @@ router.get("/", (req, res, next) => {
         // Save order information
         cache.put(reservation.transactionId, reservation);
 
-        debug(response.info.paymentUrl);
-
-        res.redirect(response.info.paymentUrl.app);
+        res.redirect(response.info.paymentUrl.web);
     })
 });
 
