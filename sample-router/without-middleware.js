@@ -32,14 +32,14 @@ router.get("/", (req, res, next) => {
         }
     }
     if (req.query.currency){
-        if (!req.query.currency.match(/^[a-zA-Z]{3}$/)){
+        if (!req.query.currency.match(/^[A-Z]{3}$/)){
             throw new Error(`Invalid currency.`);
         }
     }
 
     let productName = req.query.product_name || "demo product";
     let amount = Number(req.query.amount) || 1;
-    let currency = req.query.currency.toUpperCase() || "JPY";
+    let currency = req.query.currency || "JPY";
 
     let options = {
         productName: "demo product",
