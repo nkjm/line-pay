@@ -21,6 +21,26 @@ const pay = new line_pay({
 });
 
 router.get("/", (req, res, next) => {
+    if (req.query.product_name){
+        if (req.query.product_name.length > 40){
+            throw new Error(`product_name too long. Up to 40 letters.`);
+        }
+    }
+    if (req.query.amount){
+        if (Number(req.query.amount) === NaN){
+            throw new Error(`Invalid amount.`);
+        }
+    }
+    if (req.query.currency){
+        if (!req.query.currency.match(/^[a-zA-Z]{3}$/)){
+            throw new Error(`Invalid currency.`);
+        }
+    }
+
+    let productName = req.query.product_name || "demo product";
+    let amount = Number(req.query.amount) || 1;
+    let currency = req.query.currency.toUpperCase() || "JPY";
+
     let options = {
         productName: "demo product",
         amount: 1,
