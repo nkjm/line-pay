@@ -42,9 +42,9 @@ router.get("/", (req, res, next) => {
     let currency = req.query.currency || "JPY";
 
     let options = {
-        productName: "demo product",
-        amount: 1,
-        currency: "JPY",
+        productName: productName,
+        amount: amount,
+        currency: currency,
         orderId: uuid(),
         confirmUrl: `https://${req.hostname}${req.baseUrl}/confirm`,
         confirmUrlType: "SERVER"
