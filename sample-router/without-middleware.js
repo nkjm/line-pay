@@ -31,20 +31,14 @@ router.get("/", (req, res, next) => {
             throw new Error(`Invalid amount.`);
         }
     }
-    if (req.query.currency){
-        if (!req.query.currency.match(/^[A-Z]{3}$/)){
-            throw new Error(`Invalid currency.`);
-        }
-    }
 
     let productName = req.query.productName || "demo product";
     let amount = Number(req.query.amount) || 1;
-    let currency = req.query.currency || "JPY";
 
     let options = {
         productName: productName,
         amount: amount,
-        currency: currency,
+        currency: "JPY",
         orderId: uuid(),
         confirmUrl: `https://${req.hostname}${req.baseUrl}/confirm`,
         confirmUrlType: "SERVER"
