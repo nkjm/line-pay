@@ -21,8 +21,8 @@ const pay = new line_pay({
 });
 
 router.get("/", (req, res, next) => {
-    if (req.query.product_name){
-        if (req.query.product_name.length > 40){
+    if (req.query.productName){
+        if (req.query.productName.length > 40){
             throw new Error(`product_name too long. Up to 40 letters.`);
         }
     }
@@ -37,7 +37,7 @@ router.get("/", (req, res, next) => {
         }
     }
 
-    let productName = req.query.product_name || "demo product";
+    let productName = req.query.productName || "demo product";
     let amount = Number(req.query.amount) || 1;
     let currency = req.query.currency || "JPY";
 
