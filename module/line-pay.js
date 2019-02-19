@@ -8,8 +8,7 @@ const debug = require("debug")("line-pay:module");
 const request = require("request");
 const lossless_json = require("lossless-json");
 const api_version = "v2";
-
-let Error = require("./line-pay-error.js");
+const Error = require("./line-pay-error.js");
 Promise = require("bluebird");
 Promise.promisifyAll(request);
 
@@ -65,7 +64,6 @@ class LinePay {
             resave: false,
             saveUninitialized: false
         }
-        router.use(session(this.sessionOptions));
     }
 
     /**
@@ -90,6 +88,7 @@ class LinePay {
     @param {Boolean} [options.capture=true] - Set true if like to complete payment right after successful of confirm API call.
     */
     middleware(options){
+        router.use(session(this.sessionOptions));
         router.get("/", (req, res, next) => {
             options.confirmUrl = options.confirmUrl || `https://${req.hostname}${req.baseUrl}/confirm`;
 
