@@ -69,6 +69,7 @@ class LinePay {
         // Set proxy.
         if (options.proxyUrl){
             request = request.defaults({'proxy': options.proxyUrl});
+            Promise.promisifyAll(request);
         }
     }
 
