@@ -5,10 +5,10 @@ require("dotenv").config();
 const router = require("express").Router();
 const session = require("express-session");
 const debug = require("debug")("line-pay:module");
-const request = require("request");
 const lossless_json = require("lossless-json");
 const api_version = "v2";
 const Error = require("./line-pay-error.js");
+let request = require("request");
 Promise = require("bluebird");
 Promise.promisifyAll(request);
 
@@ -19,8 +19,9 @@ class LinePay {
     /**
     @constructor
     @param {Object} options
-    @param {String} options.channelId - LINE Channel Id
-    @param {String} options.channelSecret - LINE Channel secret
+    @param {String} options.channelId - LINE Channel Id.
+    @param {String} options.channelSecret - LINE Channel secret.
+    @param {String} [options.proxyUrl] - URL of proxy.
     @param {String} [options.hostname] - Hostname of LINE Pay API. Nomarlly, it is automatically set depeding on isSandbox parameter.
     @param {Boolean} [options.isSandbox=false] - If the environemt is sandbox, set true
     @param {Object} [options.sessionOptions] - Option object for express-session. Refer to https://github.com/expressjs/session for detail.
@@ -63,6 +64,11 @@ class LinePay {
             secret: options.channelSecret,
             resave: false,
             saveUninitialized: false
+        }
+
+        // Set proxy.
+        if (options.proxyUrl){
+            request = request.defaults({'proxy': options.proxyUrl});
         }
     }
 
