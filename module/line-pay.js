@@ -28,7 +28,7 @@ class LinePay {
     */
     constructor(options){
         const required_params = ["channelId", "channelSecret"];
-        const optional_params = ["hostname", "isSandbox", "sessionOptions"];
+        const optional_params = ["proxyUrl", "hostname", "isSandbox", "sessionOptions"];
 
         // Check if required parameters are all set.
         required_params.map((param) => {
