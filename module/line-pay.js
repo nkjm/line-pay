@@ -1,16 +1,15 @@
 "use strict";
 
-require("dotenv").config();
+require("dotenv").config()
 
-const router = require("express").Router();
-const session = require("express-session");
-const debug = require("debug")("line-pay:module");
-const lossless_json = require("lossless-json");
-const api_version = "v2";
-const Error = require("./line-pay-error.js");
-let request = require("request");
-Promise = require("bluebird");
-Promise.promisifyAll(request);
+const debug = require("debug")("line-pay:module")
+const lossless_json = require("lossless-json")
+const api_version = "v3"
+const Error = require("./line-pay-error.js")
+const crypto = require("crypto")
+const request = require("request")
+const Promise = require("bluebird")
+Promise.promisifyAll(request)
 
 /**
 @class
@@ -56,7 +55,6 @@ class LinePay {
 
         this.headers = {
             "X-LINE-ChannelId": this.channelId,
-            "X-LINE-ChannelSecret": this.channelSecret,
             "Content-Type": "application/json"
         }
 
@@ -74,117 +72,36 @@ class LinePay {
     }
 
     /**
-    Middleware to start payment flow.
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.productName - Product name.
-    @param {String} [options.productImageUrl] - URL of product image.
-    @param {Number} options.amount - Payment amount.
-    @param {String} options.currency - Currency following ISO4218.
-    @param {String} [options.mid] - LINE member ID.
-    @param {String} [options.oneTimeKey] - One time key.
-    @param {String} [options.confirmUrl] - URL to transition after the payment approval. Default is CURRENT_PROTOCOL://CURRENT_HOSTNAME/MIDDLEWARE_MOUNT_POINT/confirm
-    @param {String} [options.confirmUrlType="CLIENT"] - Confirm URL type. In this middleware, supported values are CLIENT only.
-    @param {Boolean} [options.checkConfirmUrlBrowswer=false] - If check browser on transitioning to confirm URL.
-    @param {String} [options.cancelUrl] - URL to transition after cancellation of payment.
-    @param {String} [options.packageName] - String to prevent phising in Android.
-    @param {String} options.orderId - Unique id of the order transaction.
-    @param {String} [options.deliveryPlacePhone] - Contact of payment receiver.
-    @param {String} [options.payType="NORMAL"] - Payment type. Supported values are NORMAL and PREAPPROVED.
-    @param {String} [options.langCd] - Language to display payment pending screen.
-    @param {Boolean} [options.capture=true] - Set true if like to complete payment right after successful of confirm API call.
-    */
-    middleware(options){
-        router.use(session(this.sessionOptions));
-        router.get("/", (req, res, next) => {
-            options.confirmUrl = options.confirmUrl || `https://${req.hostname}${req.baseUrl}/confirm`;
-
-            req.session.productName = options.productName;
-            req.session.orderId = options.orderId;
-            req.session.amount = options.amount;
-            req.session.currency = options.currency;
-            req.session.confirmUrl = options.confirmUrl;
-
-            this.reserve(options).then((response) => {
-                req.session.transactionId = response.info.transactionId;
-
-                if (true){ // TBD
-                    //debug(`Redirecting to payment URL: ${response.info.paymentUrl.web}...`);
-                    return res.redirect(response.info.paymentUrl.web);
-                } else {
-                    //debug(`Redirecting to payment URL: ${response.info.paymentUrl.app}...`);
-                    return res.redirect(response.info.paymentUrl.app);
-                }
-            }).catch((exception) => {
-                return res.status(400).json(exception);
-            })
-        });
-
-        router.get("/confirm", (req, res, next) => {
-            if (!req.query || !req.query.transactionId){
-                return res.status(400).send("Transaction id not found.");
-            }
-
-            let transactionId = req.query.transactionId;
-            this.confirm({
-                transactionId: transactionId,
-                amount: req.session.amount,
-                currency: req.session.currency
-            }).then((response) => {
-                next();
-            }).catch((exception) => {
-                return res.status(500).json(exception);
-            });
-        });
-
-        return router;
+     * Add signature to header.
+     * @method 
+     * @param {*} headers
+     * @param {String} path
+     * @param {String} body
+     */
+    sign(headers, path, body){
+        const signed_headers = JSON.parse(JSON.stringify(headers))
+        const nonce = String(Date.now())
+        signed_headers["X-LINE-Authorization-Nonce"] = nonce
+        signed_headers["X-LINE-Authorization"] = crypto.createHmac('sha256', this.channelSecret).update(this.channelSecret + path + body + nonce).digest('base64');
+        return signed_headers
     }
 
+
     /**
-    Method to reserve payment
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.productName - Product name.
-    @param {String} [options.productImageUrl] - URL of product image.
-    @param {Number} options.amount - Payment amount.
-    @param {String} options.currency - Currency following ISO4218.
-    @param {String} [options.mid] - LINE member ID.
-    @param {String} [options.oneTimeKey] - One time key.
-    @param {String} options.confirmUrl - URL to transition after the payment approval.
-    @param {String} [options.confirmUrlType="CLIENT"] - Confirm URL type. Supported values are CLIENT and SERVER.
-    @param {Boolean} [options.checkConfirmUrlBrowswer=false] - If check browser on transitioning to confirm URL.
-    @param {String} [options.cancelUrl] - URL to transition after cancellation of payment.
-    @param {String} [options.packageName] - String to prevent phising in Android.
-    @param {String} options.orderId - Unique id of the order transaction.
-    @param {String} [options.deliveryPlacePhone] - Contact of payment receiver.
-    @param {String} [options.payType="NORMAL"] - Payment type. Supported values are NORMAL and PREAPPROVED.
-    @param {String} [options.langCd] - Language to display payment pending screen.
-    @param {Boolean} [options.capture=true] - Set true if like to complete payment right after successful of confirm API call.
-    */
-    reserve(options){
-        const required_params = ["productName", "amount", "currency", "confirmUrl", "orderId"];
-        const optional_params = ["productImageUrl", "mid", "oneTimeKey", "confirmUrlType", "checkConfirmUrlBrowser", "cancelUrl", "packageName", "deliveryPlacePhone", "payType", "langCd", "capture"];
+     * Method to request payment.
+     * @method
+     * @param {Object} options - Request body.
+     */
+    request(options){
+        const path = `/${api_version}/payments/request`
+        const url = `https://${this.apiHostname}${path}`
+        const body = JSON.stringify(options)
+        const headers = this.sign(this.headers, path, body)
 
-        // Check if required parameters are all set.
-        required_params.map((param) => {
-            if (!options[param]){
-                throw new Error(`Required parameter ${param} is missing.`);
-            }
-        })
-
-        // Check if configured parameters are all valid.
-        Object.keys(options).map((param) => {
-            if (!required_params.includes(param) && !optional_params.includes(param)){
-                throw new Error(`${param} is not a valid parameter.`);
-            }
-        })
-
-        let url = `https://${this.apiHostname}/${api_version}/payments/request`;
-        let body = JSON.stringify(options);
         debug(`Going to reserve payment...`);
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body, this._lossless_converter);
@@ -202,13 +119,23 @@ class LinePay {
     }
 
     /**
-    Method to confirm payment
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.transactionId - Transaction id returned from reserve API.
-    @param {Number} options.amount - Payment amount.
-    @param {String} options.currency - Currency following ISO2117. Supported values are USD, JPY, TWD and THB.
-    */
+     * Wrapper function of request. This is for backward compatibility.
+     * @deprecated
+     * @method
+     * @param {Object} options  - Request body.
+     */
+    reserve(options){
+        return this.request(options)
+    }
+
+    /**
+     * Method to confirm payment
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.transactionId - Transaction id returned from reserve API.
+     * @param {Number} options.amount - Payment amount.
+     * @param {String} options.currency - Currency following ISO2117. Supported values are USD, JPY, TWD and THB.
+     */
     confirm(options){
         const required_params = ["transactionId", "amount", "currency"];
         const optional_params = [];
@@ -254,17 +181,17 @@ class LinePay {
 
 
     /**
-    Method to confirm preapproved payment
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.regKey - Key which is returned from reserve API.
-    @param {String} options.productName - Product name.
-    @param {Number} options.amount - Payment amount.
-    @param {String} options.currency - Payment currency.
-    @param {String} options.orderId - Order id which specified in reserve API.
-    @param {Boolean} [options.capture=true] - Set true to capture payment simultaneously.
-    */
-    confirmPreapprovedPay(options){
+     * Method to confirm preapproved payment
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.regKey - Key which is returned from reserve API.
+     * @param {String} options.productName - Product name.
+     * @param {Number} options.amount - Payment amount.
+     * @param {String} options.currency - Payment currency.
+     * @param {String} options.orderId - Order id which specified in reserve API.
+     * @param {Boolean} [options.capture=true] - Set true to capture payment simultaneously.
+     */
+    payPreapproved(options){
         const required_params = ["regKey", "productName", "amount", "currency", "orderId"];
         const optional_params = ["capture"];
 
@@ -304,15 +231,26 @@ class LinePay {
             }
         })
     }
+    
 
     /**
-    Method to check the availability of preapproved payment.
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.regKey - Key which is returned in reserve API.
-    @param {Boolean} [options.creditCardAuth=false] - Set true to execute authorization payment in minimum amount by registered credit card.
-    */
-    checkPreapprovedPay(options){
+     * Wrapper method of payPreapproved for backward compatibility.
+     * @method
+     * @deprecated 
+     * @param {Object} options 
+     */
+    confirmPreapprovedPay(options){
+        return this.payPreapproved(options)
+    }
+
+    /**
+     * Method to check the availability of preapproved payment.
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.regKey - Key which is returned in reserve API.
+     * @param {Boolean} [options.creditCardAuth=false] - Set true to execute authorization payment in minimum amount by registered credit card.
+     */
+    checkRegKey(options){
         const required_params = ["regKey"];
         const optional_params = ["creditCardAuth"];
 
@@ -353,12 +291,22 @@ class LinePay {
     }
 
     /**
-    Method to expire preapproved payment.
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.regKey - Key which is returned by reserve API.
-    */
-    expirePreapprovedPay(options){
+     * Wrapper method of checkRegKey for backward compatibility.
+     * @method
+     * @deprecated
+     * @param {Object} options
+     */
+    checkPreapprovedPay(options){
+        return this.checkRegKey(options)
+    }
+
+    /**
+     * Method to expire preapproved payment.
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.regKey - Key which is returned by reserve API.
+     */
+    expireRegKey(options){
         const required_params = ["regKey"];
         const optional_params = [""];
 
@@ -396,12 +344,22 @@ class LinePay {
     }
 
     /**
-    Method to void authorized payment.
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.transactionId - Transaction id to void.
-    */
-    voidAuthorization(options){
+     * Wrapper method of expireRegKey for backward compatibility.
+     * @method
+     * @deprecated
+     * @param {Object} options
+     */
+    expirePreapprovedPay(options){
+        return this.expireRegKey(options)
+    }
+
+    /**
+     * Method to void authorized payment.
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.transactionId - Transaction id to void.
+     */
+    void(options){
         const required_params = ["transactionId"];
         const optional_params = [""];
 
@@ -436,6 +394,16 @@ class LinePay {
                 return Promise.reject(new Error(response.body));
             }
         })
+    }
+
+    /**
+     * Wrapper method of void for backward compatibility.
+     * @method
+     * @deprecated
+     * @param {Object} options
+     */
+    voidAuthorization(options){
+        return this.void(options)
     }
 
     /**
@@ -485,13 +453,13 @@ class LinePay {
     }
 
     /**
-    Method to capture payment
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.transactionId - Transaction id returned from reserve API. *While it is described that data type should be number, javascript cannot handle the scale of transactionId so please set string for this parameter.
-    @param {Number} options.amount - Payment amount.
-    @param {String} options.currency - Currency following ISO2117. Supported values are USD, JPY, TWD and THB.
-    */
+     * Method to capture payment
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.transactionId - Transaction id returned from reserve API. *While it is described that data type should be number, javascript cannot handle the scale of transactionId so please set string for this parameter.
+     * @param {Number} options.amount - Payment amount.
+     * @param {String} options.currency - Currency following ISO2117. Supported values are USD, JPY, TWD and THB.
+     */
     capture(options){
         const required_params = ["transactionId", "amount", "currency"];
         const optional_params = [];
@@ -537,12 +505,13 @@ class LinePay {
     }
 
     /**
-    Method to inquire payment.
-    @param {Object} options - Object which contains parameters.
-    @param {String} [options.transactionId] - Transaction id to inquire.
-    @param {String} [options.orderId] - Order id to inquire.
-    */
-    inquirePayment(options){
+     * Method to inquire payment.
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} [options.transactionId] - Transaction id to inquire.
+     * @param {String} [options.orderId] - Order id to inquire.
+     * @param {String} [options.fields] - Targat field to inquire. Default is all.
+     */
+    paymentDetails(options){
         const required_params = [];
         const optional_params = ["transactionId", "orderId"];
 
@@ -583,12 +552,22 @@ class LinePay {
     }
 
     /**
-    Method to refund payment
-    @method
-    @param {Object} options - Object which contains parameters.
-    @param {String} options.transactionId - Transaction id to refund.
-    @param {Number} [options.refundAmount] - Amount to refund.
-    */
+     * Wrapper method of void for backward compatibility.
+     * @method
+     * @deprecated
+     * @param {Object} options
+     */
+    inquirePayment(options){
+        return this.paymentDetails(options)
+    }
+
+    /**
+     * Method to refund payment
+     * @method
+     * @param {Object} options - Object which contains parameters.
+     * @param {String} options.transactionId - Transaction id to refund.
+     * @param {Number} [options.refundAmount] - Amount to refund.
+     */
     refund(options){
         const required_params = ["transactionId"];
         const optional_params = ["refundAmount"];

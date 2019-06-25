@@ -8,7 +8,5 @@ app.listen(process.env.PORT || 5000, () => {
     console.log(`server is listening to ${process.env.PORT || 5000}...`);
 });
 
-const router_with_middleware = require("./sample-router/with-middleware");
-const router_without_middleware = require("./sample-router/without-middleware");
-app.use("/pay/w", router_with_middleware);
-app.use("/pay/wo", router_without_middleware);
+const router_line_pay = require("./sample-router/line-pay");
+app.use("/line-pay", router_line_pay);

@@ -4,6 +4,7 @@ require("dotenv").config();
 
 // Required constants
 const LINE_PAY_CONFIRM_URL = process.env.LINE_PAY_CONFIRM_URL;
+const LINE_PAY_CANCEL_URL = process.env.LINE_PAY_CANCEL_URL;
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -11,7 +12,6 @@ const debug = require("debug")("line-pay:test");
 const request = require("request");
 const uuid = require("uuid/v4");
 const line_pay = require("../module/line-pay.js")
-const TIMEOUT = 5000;
 Promise = require("bluebird");
 Promise.promisifyAll(request);
 
@@ -28,7 +28,6 @@ let pay = new line_pay({
 describe("Test method in beginning status", function(){
     describe("Reserve payment missing required parameter.", function(){
         it("should throw error.", function(){
-            this.timeout(TIMEOUT);
             return Promise.resolve().then(function(){
                 let options = {
                     //productName: "demo product",
@@ -48,7 +47,6 @@ describe("Test method in beginning status", function(){
 
     describe("Reserve payment with invalid parameter.", function(){
         it("should throw error.", function(){
-            this.timeout(TIMEOUT);
             return Promise.resolve().then(function(){
                 let options = {
                     productName: "demo product",
@@ -69,7 +67,6 @@ describe("Test method in beginning status", function(){
 
     describe("Reserve payment with invalid parameter value.", function(){
         it("should throw error.", function(){
-            this.timeout(TIMEOUT);
             return Promise.resolve().then(function(){
                 let options = {
                     productName: "demo product",
@@ -86,27 +83,34 @@ describe("Test method in beginning status", function(){
         });
     });
 
-    describe("Reserve payment with correct option.", function(){
-        it("should return result.", function(){
-            this.timeout(TIMEOUT);
-            return Promise.resolve().then(function(){
-                let options = {
-                    productName: "demo product",
-                    amount: 1,
-                    currency: "JPY",
+    describe.only("Reserve payment with correct option.", async function(){
+        it("should return result.", async function(){
+            let options = {
+                amount: 10,
+                currency: "JPY",
+                orderId: uuid(),
+                packages: [{
+                    id: uuid(),
+                    amount: 10,
+                    name: "demo package",
+                    products: [{
+                        name: "demo product",
+                        quantity: 1,
+                        price: 10
+                    }]
+                }],
+                redirectUrls: {
                     confirmUrl: LINE_PAY_CONFIRM_URL,
-                    orderId: uuid(),
-                    payType: "PREAPPROVED"
+                    cancelUrl: LINE_PAY_CANCEL_URL
                 }
-                return pay.reserve(options);
-            }).then(function(response){
-                response.returnCode.should.equal("0000");
-                response.info.should.have.property("transactionId");
-                (typeof response.info.transactionId).should.equal("string");
-                response.info.paymentUrl.should.have.property("web");
-                response.info.paymentUrl.should.have.property("app");
-                response.info.should.have.property("paymentAccessToken");
-            });
+            }
+            const response = await pay.request(options);
+            response.returnCode.should.equal("0000");
+            response.info.should.have.property("transactionId");
+            (typeof response.info.transactionId).should.equal("string");
+            response.info.paymentUrl.should.have.property("web");
+            response.info.paymentUrl.should.have.property("app");
+            response.info.should.have.property("paymentAccessToken");
         });
     });
 });
