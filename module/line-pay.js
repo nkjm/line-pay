@@ -7,7 +7,7 @@ const lossless_json = require("lossless-json")
 const api_version = "v3"
 const Error = require("./line-pay-error.js")
 const crypto = require("crypto")
-const request = require("request")
+let request = require("request")
 const Promise = require("bluebird")
 Promise.promisifyAll(request)
 
