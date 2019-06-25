@@ -154,15 +154,17 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.apiHostname}/${api_version}/payments/${options.transactionId}/confirm`;
-        let body = JSON.stringify({
+        const path = `/${api_version}/payments/${options.transactionId}/confirm`
+        const url = `https://${this.apiHostname}${path}`;
+        const body = JSON.stringify({
             amount: options.amount,
             currency: options.currency
         })
+        const headers = this.sign(this.headers, path, body)
         debug(`Going to confirm payment of transaction: ${options.transactionId}...`);
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body, this._lossless_converter);
@@ -209,13 +211,15 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/payment`;
+        const path = `/${api_version}/payments/preapprovedPay/${options.regKey}/payment`
+        const url = `https://${this.apiHostname}${path}`;
         delete options.regKey;
-        let body = JSON.stringify(options);
+        const body = JSON.stringify(options);
+        const headers = this.sign(this.headers, path, body)
         debug(`Going to execute preapproved payment of orderId: ${options.orderId}...`);
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body, this._lossless_converter);
@@ -324,11 +328,13 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.apiHostname}/${api_version}/payments/preapprovedPay/${options.regKey}/expire`;
+        const path = `/${api_version}/payments/preapprovedPay/${options.regKey}/expire`
+        const url = `https://${this.apiHostname}${path}`;
+        const headers = this.sign(this.headers, path, body)
         debug(`Going to expire of preapproved payment for regKey: ${options.regKey}...`);
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             json: true
         }).then((response) => {
             if (response.body.returnCode && response.body.returnCode == "0000"){
@@ -377,11 +383,13 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.apiHostname}/${api_version}/payments/authorizations/${options.transactionId}/void`;
+        const path = `/${api_version}/payments/authorizations/${options.transactionId}/void`
+        const url = `https://${this.apiHostname}${path}`;
+        const headers = this.sign(this.headers, path, body)
         debug(`Going to void of authorized payment for transaction id: ${options.transactionId}...`);
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             json: true
         }).then((response) => {
             if (response.body.returnCode && response.body.returnCode == "0000"){
@@ -478,16 +486,18 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.apiHostname}/${api_version}/payments/authorizations/${options.transactionId}/capture`;
-        let body = JSON.stringify({
+        const path = `/${api_version}/payments/authorizations/${options.transactionId}/capture`
+        const url = `https://${this.apiHostname}${path}`;
+        const body = JSON.stringify({
             amount: options.amount,
             currency: options.currency
         });
+        const headers = this.sign(this.headers, path, body)
         debug(`Going to capture payment...`);
         delete body.transactionId;
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body, this._lossless_converter);
@@ -586,14 +596,16 @@ class LinePay {
             }
         })
 
-        let url = `https://${this.apiHostname}/${api_version}/payments/${options.transactionId}/refund`;
-        let body = JSON.stringify({
+        const path = `/${api_version}/payments/${options.transactionId}/refund`
+        const url = `https://${this.apiHostname}${path}`;
+        const body = JSON.stringify({
             refundAmount: options.refundAmount
         });
+        const headers = this.sign(this.headers, path, body)
         debug(`Going to refund payment...`);
         return request.postAsync({
             url: url,
-            headers: this.headers,
+            headers: headers,
             body: body
         }).then((response) => {
             let body = lossless_json.parse(response.body, this._lossless_converter);
