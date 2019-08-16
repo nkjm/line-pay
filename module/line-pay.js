@@ -9,7 +9,7 @@ const lossless_json = require("lossless-json");
 const api_version = "v2";
 const Error = require("./line-pay-error.js");
 let request = require("request");
-Promise = require("bluebird");
+const Promise = require("bluebird");
 Promise.promisifyAll(request);
 
 /**
