@@ -142,7 +142,7 @@ class LinePay {
 
         // Check if required parameters are all set.
         required_params.map((param) => {
-            if (!options[param]){
+            if (!param in options){
                 throw new Error(`Required parameter ${param} is missing.`);
             }
         })
